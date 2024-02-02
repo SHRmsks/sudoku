@@ -1,0 +1,192 @@
+/*
+ * Sudoku.java
+ * 
+ * Implementation of a class that represents a Sudoku puzzle and solves
+ * it using recursive backtracking.
+ *
+ * Computer Science 112, Boston University
+ *
+ * your name: 
+ *
+ */
+
+import java.io.*;   // allows us to read from a file
+import java.util.*;
+
+public class Sudoku {    
+    // The current contents of the cells of the puzzle. 
+    private int[][] grid;
+    
+  private boolean[][] valIsFixed;
+    
+    private boolean[][][] subgridHasVal;
+
+
+
+    
+    
+    /*** ADD YOUR ADDITIONAL FIELDS HERE. ***/
+    
+    private boolean [][]rowHasVal;
+    private boolean [][]colHasVal;
+    /* 
+     * Constructs a new Puzzle object, which initially
+     * has all empty cells.
+     */
+    public Sudoku() {
+        this.grid = new int[9][9];
+        this.valIsFixed = new boolean[9][9];     
+       
+        this.subgridHasVal = new boolean[3][3][10];        
+
+        /*** INITIALIZE YOUR ADDITIONAL FIELDS HERE. ***/
+        this.rowHasVal= new boolean [9][10];
+        this.colHasVal= new boolean [9][10];
+        
+    }
+    
+    
+
+    public void placeVal(int val, int row, int col) {
+        this.grid[row][col] = val;
+        this.subgridHasVal[row/3][col/3][val] = true;
+        this.rowHasVal[col][val]= true;
+        this.colHasVal[row][val]= true;
+       
+        /*** UPDATE YOUR ADDITIONAL FIELDS HERE. ***/
+    }
+        
+  
+    public void removeVal(int val, int row, int col) {
+        this.grid[row][col] = 0;
+        this.subgridHasVal[row/3][col/3][val] = false;
+        this.rowHasVal[col][val]=false;
+        this.colHasVal[row][val]= false;
+      
+      
+    }  
+
+    private boolean isSafe(int row, int col, int val){
+        
+       if (this.rowHasVal[col][val]||this.colHasVal[row][val] ||this.subgridHasVal[row/3][col/3][val] ||this.valIsFixed[row][col]){
+        return false;
+       }
+        return true;
+    }
+   
+    public void readConfig(Scanner input) {
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                int val = input.nextInt();
+                this.placeVal(val, r, c);
+                if (val != 0) {
+                    this.valIsFixed[r][c] = true;
+                }
+            }
+            input.nextLine();
+        }
+    }
+    
+
+    /*
+     * Displays the current state of the puzzle.
+     * You should not change this method.
+     */        
+    public void printGrid() {
+        for (int r = 0; r < 9; r++) {
+            printRowSeparator();
+            for (int c = 0; c < 9; c++) {
+                System.out.print("|");
+                if (this.grid[r][c] == 0) {
+                    System.out.print("   ");
+                } else {
+                    System.out.print(" " + this.grid[r][c] + " ");
+                }
+            }
+            System.out.println("|");
+        }
+        printRowSeparator();
+    }
+        
+    // A private helper method used by display() 
+    // to print a line separating two rows of the puzzle.
+    private static void printRowSeparator() {
+        for (int i = 0; i < 9; i++) {
+            System.out.print("----");
+        }
+        System.out.println("-");
+    }
+    
+
+    /*** ADD ANY ADDITIONAL METHODS HERE. ***/
+
+   
+    private boolean solveRB(int n) {
+                
+        /* 
+         * The following return statement allows the initial code to
+         * compile.  Replace it with your full implementation of the
+         * recursive-backtracking method.
+         */
+
+         if ((n/9) == this.grid.length){
+            return true; 
+         }// case to end 
+        if (this.valIsFixed[n/9][n%9]){
+           return solveRB(n+1);
+        }
+            for (int i=1; i<= 9; i++){       // for loop to try every num
+             if (isSafe((n/9), (n%9), i)){      // if safe 
+                placeVal(i, (n/9), (n%9));      // place 
+                
+               if (solveRB(n+1)){               // recursively call the next num, till the end of recursionx
+                return true;                    // end it by returning true
+               } 
+               removeVal(i, (n/9), (n%9));
+            }
+                        // if n+1 is not, continue looping
+      
+       
+         }
+        return false;
+    } 
+    
+    /*
+     * public "wrapper" method for solveRB().
+     * Makes the initial call to solveRB, and returns whatever it returns.
+     */
+    public boolean solve() { 
+        boolean foundSol = this.solveRB(0);
+        return foundSol;
+    }
+    
+    public static void main(String[] args) {
+        Scanner scan = new Scanner(System.in);
+        Sudoku puzzle = new Sudoku();
+        
+        System.out.print("Enter the name of the puzzle file: ");
+        String filename = scan.nextLine();
+        
+        try {
+            Scanner input = new Scanner(new File(filename));
+            puzzle.readConfig(input);
+        } catch (IOException e) {
+            System.out.println("error accessing file " + filename);
+            System.out.println(e);
+            System.exit(1);
+        }
+        
+        System.out.println();
+        System.out.println("Here is the initial puzzle: ");
+        puzzle.printGrid();
+        System.out.println();
+        
+        if (puzzle.solve()) {
+            System.out.println("Here is the solution: ");
+        } else {
+            System.out.println("No solution could be found.");
+            System.out.println("Here is the current state of the puzzle:");
+        }
+        puzzle.printGrid();  
+    }    
+}
